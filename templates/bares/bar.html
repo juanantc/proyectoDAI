@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="es">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>De tapas por Granada</title>
+
+    <link rel="stylesheet" href="https://bootswatch.com/cerulean/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+    <script src="http://getbootstrap.com/assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script src="{% static "highcharts.js" %}"></script>
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+          </button>
+          <a class="navbar-brand">De Tapas por Granada</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="jumbotron">
+      <div class="container">
+        {% if bar %}
+          <h1>{{ bar.nombre_bar }}</h1>
+          <img src="{% static "images/tapa.jpg" %}" class="img-thumbnail" width="304" height="246">
+          <br><br>
+          <ul>
+            {% if tapas %}
+              {% for tapa in tapas %}
+                <li>{{ tapa.nombre_tapa }} (votos: {{ tapa.votos }})
+                {% if user.is_authenticated %}
+                  <form class="form-inline" method="post" action="#">
+                    <input type="hidden" name="id_tapa" value="{{ tapa.id_tapa }}">
+                    {% csrf_token %}
+                    <input type="submit" name="votar" value="Votar"/>
+                  </form>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <strong>El bar no tiene tapas</strong>
+            {% endif%}
+          </ul>
+        {% else %}
+          <strong>El bar no existe</strong>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <form class="navbar-form navbar-left" method="post" action="#">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" name="add_tapa" value="Incluir tapa"/>
+          </form>
+          <br><br><br>
+        {% endif %}
+
+        <div id="grafica" style="height:400px"></div>
+
+        <script type="text/javascript">
+            $(function () {
+                $('#grafica').highcharts({
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: 'Tapas más votadas',
+                        x: -20 //center
+                    },
+                    xAxis: {
+                        {% autoescape off %}
+                        categories: {{ nombres_tapas }}
+                        {% endautoescape %}
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Votos'
+                        },
+                        plotLines: [{
+                            value: 0,
+                            width: 1,
+                            color: '#808080'
+                        }]
+                    },
+                    tooltip: {
+                        valueSuffix: 'Nº'
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'middle',
+                        borderWidth: 0
+                    },
+                    series: [{
+                        name: 'Nº votos',
+                        data: {{ votos_tapas }}
+                    }]
+                });
+            });
+        </script>
+
+        <a href="/bares">Volver</a>
+      </div>
+    </div>
+  </body>
+</html>
